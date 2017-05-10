@@ -152,8 +152,8 @@ int uncomp(RAWDATA *rd, unsigned char *source, size_t sourceLen)
     if (ret != Z_OK)
         return ret;
 
-    
-    strm.avail_out = rd->alloced - rd->used;; 
+
+    strm.avail_out = rd->alloced - rd->used;;
     strm.next_out = (unsigned char *) rd->data;
     /* decompress until deflate stream ends or end of file */
     do
@@ -214,22 +214,22 @@ Datum gunzip(PG_FUNCTION_ARGS);
 
 PG_FUNCTION_INFO_V1(gunzip);
 Datum gunzip(PG_FUNCTION_ARGS) {
-   bytea *gzipped_input = PG_GETARG_BYTEA_P(0);
-   unsigned char *src = (unsigned char *) VARDATA(gzipped_input);
-   text *destination;
-   size_t srclen =  VARSIZE(gzipped_input) - VARHDRSZ;
-   
-    RAWDATA *rd = init_data(srclen * 2);// Vi börjar med dubbelt så stor output som input så får vi se
-    
- //  unsigned char *dst_ptr = (unsigned char *) VARDATA(destination);
+    bytea *gzipped_input = PG_GETARG_BYTEA_P(0);
+    unsigned char *src = (unsigned char *) VARDATA(gzipped_input);
+    text *destination;
+    size_t srclen =  VARSIZE(gzipped_input) - VARHDRSZ;
 
-   uncomp (rd,src, srclen);
-   
-   destination = (text *) palloc(VARHDRSZ + rd->used);
-   strcpy(VARDATA(destination), rd->data);
-   SET_VARSIZE(destination, VARHDRSZ + rd->used);
-    
-   
-   destroy_data(rd);
-   PG_RETURN_TEXT_P(destination);
+    RAWDATA *rd = init_data(srclen * 2);// Vi börjar med dubbelt så stor output som input så får vi se
+
+//  unsigned char *dst_ptr = (unsigned char *) VARDATA(destination);
+
+    uncomp (rd,src, srclen);
+
+    destination = (text *) palloc(VARHDRSZ + rd->used);
+    strcpy(VARDATA(destination), rd->data);
+    SET_VARSIZE(destination, VARHDRSZ + rd->used);
+
+
+    destroy_data(rd);
+    PG_RETURN_TEXT_P(destination);
 }
