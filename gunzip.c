@@ -168,6 +168,7 @@ int uncomp(RAWDATA *rd, unsigned char *source, size_t sourceLen)
         while(1)
         {
             strm.avail_out = rd->alloced - rd->used;
+	//elog(NOTICE, "strm.avail_out = %d, rd->alloced =%ld, rd->used= %ld ",strm.avail_out,rd->alloced, rd->used);
             strm.next_out =(unsigned char *) rd->data + rd->used;
             ret = inflate(&strm, Z_NO_FLUSH);
             assert(ret != Z_STREAM_ERROR);  /* state not clobbered */
@@ -186,12 +187,13 @@ int uncomp(RAWDATA *rd, unsigned char *source, size_t sourceLen)
             else
                 break;
         }
-
         /* done when inflate() says it's done */
     } while (ret != Z_STREAM_END);
 
     if(strm.avail_out == 0)
         realloc_data(rd);
+
+     //elog(NOTICE, "slut: strm.avail_out = %d, rd->alloced =%ld, rd->used= %ld ",strm.avail_out,rd->alloced, rd->used);
     rd->data[rd->used] = '\0';
     rd->used++;
 
@@ -199,15 +201,6 @@ int uncomp(RAWDATA *rd, unsigned char *source, size_t sourceLen)
     (void)inflateEnd(&strm);
     return ret == Z_STREAM_END ? Z_OK : Z_DATA_ERROR;
 }
-
-
-
-
-
-
-
-
-
 
 
 Datum gunzip(PG_FUNCTION_ARGS);
@@ -222,12 +215,15 @@ Datum gunzip(PG_FUNCTION_ARGS) {
     RAWDATA *rd = init_data(srclen * 2);// Vi börjar med dubbelt så stor output som input så får vi se
 
 //  unsigned char *dst_ptr = (unsigned char *) VARDATA(destination);
-
-    uncomp (rd,src, srclen);
+    if(uncomp (rd,src, srclen) != Z_OK)
+    {
+        elog(ERROR,"Failed unzipping\n");
+	PG_RETURN_NULL();
+    }
 
     destination = (text *) palloc(VARHDRSZ + rd->used);
     strcpy(VARDATA(destination), rd->data);
-    SET_VARSIZE(destination, VARHDRSZ + rd->used);
+    SET_VARSIZE(destination, VARHDRSZ + strlen(rd->data));
 
 
     destroy_data(rd);
