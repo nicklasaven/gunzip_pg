@@ -217,7 +217,7 @@ Datum gunzip(PG_FUNCTION_ARGS) {
 //  unsigned char *dst_ptr = (unsigned char *) VARDATA(destination);
     if(uncomp (rd,src, srclen) != Z_OK)
     {
-        elog(ERROR,"Failed unzipping\n");
+        elog(NOTICE,"Failed unzipping\n");
 	PG_RETURN_NULL();
     }
 
