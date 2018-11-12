@@ -1,12 +1,12 @@
 
 
-LDFLAGS =  -L /usr/local/lib 
+#LDFLAGS =  -L /usr/local/lib 
 
 MODULE_big = gunzip
 OBJS = gunzip.o
 
 EXTENSION = gunzip
-DATA = gunzip--0.1.sql
+DATA = gunzip--0.2.sql
 
 EXTRA-CLEAN =
 

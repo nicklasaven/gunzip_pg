@@ -203,10 +203,10 @@ int uncomp(RAWDATA *rd, unsigned char *source, size_t sourceLen)
 }
 
 
-Datum gunzip(PG_FUNCTION_ARGS);
+Datum gunzip_text(PG_FUNCTION_ARGS);
 
-PG_FUNCTION_INFO_V1(gunzip);
-Datum gunzip(PG_FUNCTION_ARGS) {
+PG_FUNCTION_INFO_V1(gunzip_text);
+Datum gunzip_text(PG_FUNCTION_ARGS) {
     bytea *gzipped_input = PG_GETARG_BYTEA_P(0);
     unsigned char *src = (unsigned char *) VARDATA(gzipped_input);
     text *destination;
@@ -228,4 +228,32 @@ Datum gunzip(PG_FUNCTION_ARGS) {
 
     destroy_data(rd);
     PG_RETURN_TEXT_P(destination);
+}
+
+Datum gunzip_bytea(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(gunzip_bytea);
+Datum gunzip_bytea(PG_FUNCTION_ARGS) {
+    bytea *gzipped_input = PG_GETARG_BYTEA_P(0);
+    unsigned char *src = (unsigned char *) VARDATA(gzipped_input);
+    uint8_t *destination;
+    size_t srclen =  VARSIZE(gzipped_input) - VARHDRSZ;
+
+    RAWDATA *rd = init_data(srclen * 2);// Vi börjar med dubbelt så stor output som input så får vi se
+
+//  unsigned char *dst_ptr = (unsigned char *) VARDATA(destination);
+    if(uncomp (rd,src, srclen) != Z_OK)
+    {
+        elog(NOTICE,"Failed unzipping\n");
+	PG_RETURN_NULL();
+    }
+
+    destination = (uint8_t *) palloc(VARHDRSZ + rd->used);
+    
+    memcpy(VARDATA(destination), rd->data, rd->used);
+    
+    SET_VARSIZE(destination, VARHDRSZ + strlen(rd->data));
+
+    destroy_data(rd);
+
+	PG_RETURN_BYTEA_P(destination);
 }
